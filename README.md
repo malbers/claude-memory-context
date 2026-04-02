@@ -30,6 +30,16 @@ That's it. After a few sessions you'll feel the difference.
 
 ---
 
+## How to start every session
+
+Tell Claude what you're walking into before you ask anything else:
+
+> *"I'm working on project X, with person Y, on topic Z."*
+
+One sentence. Claude loads the right files, pulls the right context, and you skip the re-explanation tax. The more specific you are upfront, the faster the session gets useful. This is the single highest-leverage habit in the whole system.
+
+---
+
 ## The one habit that matters
 
 The files only work if you keep them current. You don't have to do it manually — just tell Claude:
