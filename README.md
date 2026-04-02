@@ -50,6 +50,26 @@ The fix: say `/savestate` anytime. Claude scans the conversation, extracts what 
 
 ---
 
+## The next unlock: sub-agents
+
+Once the memory structure is running, the next thing to wire in is sub-agents.
+
+The pattern: your main Claude context is for thinking and decisions. Sub-agents handle execution — file edits, searches, long writing tasks, research pulls. This keeps your main context clean and focused, and lets Claude parallelize independent work.
+
+Add this to your `CLAUDE.md` under Capture Discipline:
+
+```
+Delegate all file edits, searches, and long writing or synthesis tasks to sub-agents.
+Main context is for thinking and decisions only. Never do in the main thread what
+a sub-agent can do cleanly in parallel.
+```
+
+Once it's in your instructions, Claude will route execution work out automatically. Your main thread stays sharp. Sessions that used to bog down in file writes and long reads stop feeling slow.
+
+This pairs naturally with the memory structure: sub-agents write to `current.md` and project files while the main context moves forward. Nothing lost, nothing blocking.
+
+---
+
 ## Directory structure
 
 ```
