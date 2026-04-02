@@ -60,6 +60,26 @@ The fix: say `/savestate` anytime. Claude scans the conversation, extracts what 
 
 ---
 
+## Keeping files lean: topic files
+
+When a session goes deep on something specific, don't let it bloat `current.md`. Pull it out:
+
+> *"This thread is good — write it to a new file: cooltopic.md"*
+
+Next session, just ask Claude to load it:
+
+> *"Load cooltopic.md — we're picking up that thread."*
+
+`current.md` keeps a pointer:
+
+```
+→ See cooltopic.md for full context
+```
+
+That's the whole working model: two permanent files for structure, unlimited topic files for depth, `current.md` as the index that ties them together. Nothing bloats. Everything's findable.
+
+---
+
 ## The next unlock: sub-agents
 
 Once the memory structure is running, the next thing to wire in is sub-agents.
