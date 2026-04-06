@@ -14,6 +14,7 @@ This repo is that structure. Two files per project, one habit, and sessions star
 |------|-------------|
 | `CLAUDE.md` | Project brief — Claude reads this automatically at the start of every session |
 | `current.md` | Live work layer — active threads, decisions made, what's next |
+| `context-index.md` | Index of all context files — tells Claude where to find everything |
 | `how-this-works.md` | Full guide — the problem, the fix, the discipline |
 | `savestate-skill/SKILL.md` | Drop-in skill for Claude Code — triggers on `/savestate` |
 
@@ -100,20 +101,51 @@ This pairs naturally with the memory structure: sub-agents write to `current.md`
 
 ---
 
+## When current.md gets too big
+
+Sessions compound. That's the point. But it creates a second problem: `current.md` grows without bound. When it hits ~10,000 tokens, Claude can't read the whole thing. Older threads become invisible. You're losing context again — the exact problem you built this to solve.
+
+The fix is the **context-index pattern**. Three parts:
+
+1. `current.md` stays active-only — open threads only, always fully readable
+2. Closed threads move to domain files (`files/people/`, `files/decisions/`, etc.) at full fidelity
+3. `context-index.md` is a one-page index listing every domain file with a one-liner — Claude loads it at session start and knows where everything lives
+
+The key rule: **never compress**. When you route a closed thread to a domain file, write it at full fidelity. Compression defeats the purpose — you're solving context loss, not creating a summarized version of it.
+
+See `how-this-works.md` for the full pattern and wiring instructions.
+
+---
+
 ## Directory structure
 
 ```
 my-projects/
   project-a/
     CLAUDE.md          ← always loaded
-    current.md         ← live threads
+    current.md         ← active threads only
+    context-index.md   ← index of all domain files
+    files/
+      people/          ← one file per person
+      decisions/       ← key architectural choices
+      research/        ← synthesized source material
   project-b/
     CLAUDE.md
     current.md
-  shared-current.md    ← cross-project threads (optional)
+    context-index.md
+  shared-current.md         ← cross-project threads (optional)
+  shared-context-index.md   ← cross-project index (optional)
 ```
 
 One project per folder. Claude Code reads the `CLAUDE.md` in whatever directory you open it from.
+
+---
+
+## Recent changes
+
+**April 2026** — Context-index system: solves the current.md growth problem. When the file hits token limits, context becomes invisible. The fix: active threads in current.md, closed threads in domain files, context-index.md as the index Claude loads every session.
+
+**April 2026** — Savestate skill updated: now routes closed threads to domain files and updates the index, keeping current.md lean automatically.
 
 ---
 

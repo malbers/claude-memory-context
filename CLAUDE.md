@@ -48,4 +48,5 @@ extract what matters, write a dated entry to `current.md`, confirm what was save
 
 ## Key Files
 - `current.md` — active threads, decisions, in-progress work (load every session)
+- `context-index.md` — index of all context files; load at session start to know what exists
 - `../shared-current.md` — cross-project threads (load if working across projects)

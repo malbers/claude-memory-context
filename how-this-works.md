@@ -196,6 +196,62 @@ The rule: if you'd want to load it in a future session, give it its own file.
 
 ---
 
+## When current.md Gets Too Big: The Context-Index Pattern
+
+Sessions compound — that's what this system is built for. But compounding sessions create a second problem: `current.md` grows without bound. When it hits token limits (roughly 10,000 tokens), Claude can't read the whole file. Older threads become invisible. Sessions start losing context again — the exact problem you built this to solve.
+
+The fix is a three-part pattern that keeps `current.md` lean while preserving everything at full fidelity.
+
+**The fix: current.md stays active-only**
+
+`current.md` holds open threads only — things with next steps pending. When a thread closes, it leaves. This keeps the file small and always fully readable.
+
+Closed threads move to domain files (`files/people/`, `files/decisions/`, `files/research/`, etc.). Full fidelity, not compressed. The detail lives there; `current.md` just tracks what's open.
+
+**context-index.md: the index Claude loads every session**
+
+Add a single index file to your project: `context-index.md`. It lists every domain file with a one-liner — what it contains and when you'd want to load it. Think of it as a table of contents for everything Claude might need to know.
+
+Wire it into your `CLAUDE.md` so it auto-loads alongside `current.md`:
+
+```
+## Key Files
+- `current.md` — active threads (load every session)
+- `context-index.md` — index of all context files (load every session)
+```
+
+At session start, Claude reads the index, knows what exists, and loads specific files only when they're relevant.
+
+**The workflow**
+
+1. Thread opens → goes in `current.md` at full fidelity
+2. Thread closes → full context written to appropriate domain file → `context-index.md` updated → thread removed from `current.md`
+3. Next session: Claude loads `current.md` + `context-index.md`, knows where everything lives
+
+**Directory structure with context-index**
+
+```
+my-project/
+  CLAUDE.md
+  current.md
+  context-index.md
+  files/
+    people/          ← one file per person
+    decisions/       ← key architectural choices
+    research/        ← synthesized source material
+    implementations/ ← things you built or designed
+```
+
+**The critical rule: never compress**
+
+When writing a closed thread to a domain file, write it at full fidelity. Do not summarize. Do not compress. Compression defeats the purpose of the entire system — you're solving context loss, not creating a summarized version of it. The domain file should contain everything you'd want a future session to know.
+
+**For multi-project setups**
+
+If you're working across multiple projects, keep a `shared-context-index.md` at your root level alongside `shared-current.md`. Same pattern — lists cross-project domain files with one-liners. Reference it from each project's `CLAUDE.md`.
+
+---
+
 ## What Comes Next (Optional)
 
 Once you have the basics running, you can go deeper:
