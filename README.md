@@ -82,6 +82,10 @@ Claude has a context window. Go deep enough in a single session and it starts co
 
 The fix: say `/savestate` anytime. Claude scans the conversation, extracts what matters, and writes a dated entry to `current.md`. Install the skill in `savestate-skill/` for the full trigger behavior.
 
+**First principle: no knowledge loss.** When a savestate closes a thread, the rule is absolute - preserve everything. Discoverability beats elegance. If you're unsure whether a piece of context is worth keeping, keep it. The cost of a slightly longer domain file is nothing compared to the cost of reconstructing lost reasoning weeks later.
+
+**Verify before claiming.** The skill includes a hard rule: any "added X to file Y" line in a savestate summary must be verified against the actual file before the savestate is considered complete. This prevents phantom writes - a class of silent failure where the prose gets written but the file edit never lands. Long sessions produce these, and they stay undetected for days. The skill re-reads or greps every target file before declaring done.
+
 ---
 
 ## Keeping files lean: topic files
@@ -209,6 +213,15 @@ The fix is the **context-index pattern**. Three parts:
 
 The key rule: **never compress**. When you route a closed thread to a domain file, write it at full fidelity. Compression defeats the purpose - you're solving context loss, not creating a summarized version of it.
 
+### Closing a thread: two modes
+
+When a thread closes, the savestate skill treats it one of two ways:
+
+- **Route-and-remove (default).** The thread's full narrative gets a home in a domain file. `current.md` is cleaned. `context-index.md` is updated to point at the new entry. Memory files are touched if there's a durable rule or fact worth keeping. Four surfaces, one atomic pass, all consistent when done.
+- **Remove-only (narrow exception).** Only used when all three hold: the artifact already lives in its permanent home (code, skill file, roadmap), git history fully captures the change with a descriptive commit, and the narrative is reconstructable from the artifact plus git alone. When in doubt, route. Remove-only exists for trivial cleanup threads, not substantive work.
+
+The multi-surface rule matters because a closed thread can touch up to four files - `current.md`, `context-index.md`, a domain file, and a memory file. Inconsistency across surfaces means drift between you and Claude. The skill checks all four before declaring the save complete.
+
 See `how-this-works.md` for the full pattern and wiring instructions.
 
 ---
@@ -244,6 +257,8 @@ The `files/people/` directory deserves a callout: one file per person you work w
 ---
 
 ## Recent changes
+
+**April 2026** - Savestate hardening: added the "no knowledge loss" first principle, explicit two-mode thread closure (route-and-remove by default, remove-only as a narrow exception), a multi-surface sync requirement across `current.md` / `context-index.md` / domain files / memory files, and a CRITICAL verify-edits-before-claiming rule that prevents phantom writes - summaries that narrate file edits that never actually landed. The skill now re-reads or greps every target file before declaring a save complete.
 
 **April 2026** - Memory system: persistent memory files with typed entries (user, feedback, project, reference). MEMORY.md as the always-loaded index. Claude learns your preferences, corrections, and project context across sessions, so you stop re-explaining yourself.
 
