@@ -88,6 +88,18 @@ The fix: say `/savestate` anytime. Claude scans the conversation, extracts what 
 
 ---
 
+## Daily bookends: /SOD and /EOD
+
+Savestate handles mid-session capture. The bigger habit is bracketing each day with a deliberate open and close.
+
+- **`/SOD`** - Start of Day. Parallel fan-out across calendar, open todos, threads in `current.md`, and yesterday's `/EOD` handoff. Synthesizes the result into a focus-anchored brief: today's 5-7 priorities, anything slipping, what's load-bearing this week. Replaces the "what was I doing again" tax.
+
+- **`/EOD`** - End of Day. Closes the day. Captures what shipped, what slipped, what's pending tomorrow, plus any open promises to others that drifted. Writes a dated handoff file that `/SOD` reads first thing the next morning. Also merges the daily branch back to `main` with `--no-ff` so each day shows up as a discrete commit.
+
+`/savestate` protects against mid-session loss. `/SOD` and `/EOD` make days compound. Public skill files coming - the pattern is the part to copy first.
+
+---
+
 ## Keeping files lean: topic files
 
 When a session goes deep on something specific, don't let it bloat `current.md`. Pull it out:
@@ -256,7 +268,32 @@ The `files/people/` directory deserves a callout: one file per person you work w
 
 ---
 
+## Backup and durability: git as the sync layer
+
+A memory system that doesn't survive machine loss, mid-session crashes, or switching laptops isn't earning its keep. The cheap durability layer is git.
+
+The pattern:
+
+1. The whole project tree lives in a git repo. Make it private if your memory is sensitive, public if it's not - either works.
+2. Daily machine-tagged branches: `desktop/2026-04-30`, `laptop/2026-04-30`. Created at start of day, merged to `main` with `--no-ff` at end of day. Each day shows up as a discrete merge commit on `main`.
+3. A nightly automated commit/push catches anything not yet captured. On Windows that's a Task Scheduler job running a small `backup.ps1`. On Linux/Mac it's cron.
+4. An `audit-log.md` at repo root records non-trivial actions (auto vs. approved-by-user). This is the observability layer - when Claude's behavior drifts, the log tells you why.
+
+What this gets you:
+
+- **Survives anything.** Wipe a drive, switch laptops, restore from backup - pull the repo and Claude reads `CLAUDE.md` + `current.md` + `MEMORY.md` and is back where you left it.
+- **Multi-machine and multi-instance.** A primary local instance and a secondary cloud instance (a remote server running scheduled jobs) can both pull from the same repo and write to the same memory files. Conflict resolution is `git pull --rebase` at session start.
+- **Auditability.** Every change to memory or `current.md` shows up in `git log`. When something feels off, blame and diff tell you exactly when and why.
+
+Cheap, durable, free. The memory layer becomes as portable as the code itself.
+
+---
+
 ## Recent changes
+
+**April 2026** - Backup and durability documented: git as the sync layer, daily machine-tagged branches, nightly auto-commit, `audit-log.md` for observability. Same memory loads on any machine that pulls the repo.
+
+**April 2026** - Daily bookends: `/SOD` and `/EOD` skill patterns added. Bracket every day with a start-of-day briefing and end-of-day handoff. `/savestate` protects mid-session; `/SOD` and `/EOD` make days compound.
 
 **April 2026** - Savestate hardening: added the "no knowledge loss" first principle, explicit two-mode thread closure (route-and-remove by default, remove-only as a narrow exception), a multi-surface sync requirement across `current.md` / `context-index.md` / domain files / memory files, and a CRITICAL verify-edits-before-claiming rule that prevents phantom writes - summaries that narrate file edits that never actually landed. The skill now re-reads or greps every target file before declaring a save complete.
 
