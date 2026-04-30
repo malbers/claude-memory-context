@@ -53,17 +53,29 @@ want me to save state before we go further?"
 **Savestate:** If I say `/savestate` or "save state", scan the conversation,
 extract what matters, write a dated entry to `current.md`, confirm what was saved.
 
+**Audit log:** Append a one-line entry to `audit-log.md` at the repo root for every non-trivial action you take on my behalf. Format: `[YYYY-MM-DD HH:MM] <action> (auto / approved by user)`. Skip routine reads and internal tool use. See `audit-log.md` for full format and examples.
+
 ---
 
 ## Memory
-Persistent memory lives in `memory/`. `memory/MEMORY.md` is the index - load it every session.
+Persistent memory lives in `memory/`. `memory/MEMORY.md` is the always-loaded index - load it every session.
 Memory files capture things worth remembering across sessions: user preferences, feedback on approach, project context, external references.
-When you learn something that should persist, write it to a memory file and add a one-line pointer in MEMORY.md.
+When you learn something that should persist, write it to a memory file and add a one-line pointer in the right tier.
+
+**Tiered memory** (use the higher tiers once `MEMORY.md` hits ~150 lines):
+- **`memory/MEMORY.md`** (Tier 1) - always loaded. Behavioral rules, identity, cross-project preferences. The rule: must apply on at least 80% of sessions.
+- **`memory/MEMORY-projects.md`** (Tier 2) - project-gated. Reference with `@memory/MEMORY-projects.md` in each project's `CLAUDE.md` so it loads only when working in that project.
+- **`memory/MEMORY-reference.md`** (Tier 3) - on-demand. Loaded only when a specific tool or topic comes up.
+
+Start with Tier 1 only. Tiering is an optimization for when memory grows.
 
 ---
 
 ## Key Files
 - `current.md` - active threads, decisions, in-progress work (load every session)
 - `context-index.md` - index of all context files; load at session start to know what exists
-- `memory/MEMORY.md` - memory index; load every session for persistent preferences and feedback
+- `memory/MEMORY.md` - memory index Tier 1; load every session
+- `memory/MEMORY-projects.md` - memory index Tier 2; reference from project CLAUDE.md
+- `memory/MEMORY-reference.md` - memory index Tier 3; load on demand
+- `audit-log.md` - running record of non-trivial actions Claude takes on your behalf
 - `../shared-current.md` - cross-project threads (load if working across projects)
