@@ -289,7 +289,89 @@ Cheap, durable, free. The memory layer becomes as portable as the code itself.
 
 ---
 
+## Audit log: what Claude has done on your behalf
+
+Memory captures intent. The audit log captures action.
+
+When Claude does something non-trivial - edits a memory file, sends a message you approved, runs a deploy, modifies a config - append a one-line entry to `audit-log.md` at your repo root. This becomes the running record of what Claude touched and when.
+
+**What to log:**
+- Edits to memory files, CLAUDE.md, current.md, or configs
+- External actions (emails sent, commits pushed, deploys, API calls on your behalf)
+- Approvals you granted (so you can spot patterns of repeated approval)
+- Decisions Claude made autonomously (so you can review them later)
+
+**What NOT to log:**
+- Every file read, search, or grep
+- Routine reads of memory or `current.md` (those happen every session)
+- Internal tool use that doesn't change state
+
+**Format:**
+
+```
+[2026-04-30 14:32] edited memory/feedback_writing_style.md (auto)
+[2026-04-30 14:35] sent reply to client@example.com (approved by user)
+[2026-04-30 14:40] pushed commit to main (approved by user)
+```
+
+The `auto` vs `approved by user` tag matters. When behavior drifts, scan for auto-actions that should have asked. When you've approved the same action type many times, that's a signal you can probably auto-grant it.
+
+**Wiring it in:**
+
+Add this line to your CLAUDE.md under Capture Discipline:
+
+> Append a one-line entry to `audit-log.md` for every non-trivial action you take on my behalf. Format: `[timestamp] [action] [auto / approved by user]`. Do not log trivial reads or internal tool use.
+
+That's it. Claude reads the instruction every session and starts logging. Review the log periodically; archive when it gets long.
+
+**Why this matters:** When something feels off about Claude's behavior, the audit log tells you what changed. When you onboard a new tool or hook, the log tells you whether it actually fired. When trust is being calibrated between you and the AI, the log is the data.
+
+---
+
+## When MEMORY.md gets long: tier the memory layer
+
+`MEMORY.md` is auto-loaded every session. That's its power - Claude reads it without being asked. It's also the catch: every line in it costs tokens on every session, forever.
+
+A flat `MEMORY.md` is fine for the first 50-100 entries. Past that, every session pays the cost of memory that may not apply to what you're working on. The fix is to tier the memory layer.
+
+**Three tiers:**
+
+- **Tier 1: `MEMORY.md`** - always loaded. Behavioral rules that apply everywhere, identity (who you are, how you work), cross-project preferences. Keep this lean. The rule: if a memory doesn't apply on at least 80% of sessions, it doesn't belong in Tier 1.
+
+- **Tier 2: `MEMORY-projects.md`** - project-gated. Loaded by individual project `CLAUDE.md` files when working in that project. Project-specific memories, ongoing work context, deadlines. A memory about Project A is dead weight when working on Project B - Tier 2 keeps it scoped.
+
+- **Tier 3: `MEMORY-reference.md`** - on-demand. Loaded only when a specific topic comes up. Tool-specific quirks, infrastructure pointers, rare-but-useful references. The pattern: "here's how I work with tool X" is only relevant when working with tool X.
+
+**Wiring it in:**
+
+In your top-level `MEMORY.md`, add a header that makes the tiering explicit so Claude knows what's where:
+
+```markdown
+## Tiered Memory System
+- **This file (MEMORY.md):** Tier 1 - always loaded. Behavioral rules, identity, cross-project preferences.
+- **MEMORY-projects.md:** Tier 2 - loaded by project CLAUDE.md files when relevant.
+- **MEMORY-reference.md:** Tier 3 - loaded on-demand when a specific tool or topic comes up.
+```
+
+Then in each project's `CLAUDE.md`, add a line referencing Tier 2 so it loads automatically when you open Claude Code in that project:
+
+```
+@MEMORY-projects.md
+```
+
+Tier 3 stays unloaded until you ask for it: *"Load MEMORY-reference.md and find the deploy steps."*
+
+**The trade-off:** more files to maintain and a slightly higher cognitive load on where things live. Worth it once you have 100+ memories and your session start is paying real token cost for entries that don't apply.
+
+**When to tier:** if `MEMORY.md` hits ~150 lines, start moving project-specific entries to Tier 2. If you load the same reference memory across most topics, leave it in Tier 1. If you load it twice ever, Tier 3.
+
+---
+
 ## Recent changes
+
+**April 2026** - Audit log pattern: drop `audit-log.md` at repo root; Claude appends a one-line entry per non-trivial action, tagged `auto` or `approved by user`. Observability for what the AI has done on your behalf, and the data layer for trust calibration.
+
+**April 2026** - Memory tiering: when `MEMORY.md` grows past ~150 lines, split into three tiers (always-loaded, project-gated, on-demand). Keeps session start cost bounded as memory compounds.
 
 **April 2026** - Backup and durability documented: git as the sync layer, daily machine-tagged branches, nightly auto-commit, `audit-log.md` for observability. Same memory loads on any machine that pulls the repo.
 
