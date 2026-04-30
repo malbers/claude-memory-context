@@ -238,6 +238,52 @@ See `how-this-works.md` for the full pattern and wiring instructions.
 
 ---
 
+## Decision log: write the why, not just the what
+
+`files/decisions/` deserves its own callout. It's one of the highest-leverage domain patterns and it's the easiest one to skip.
+
+A decision log is a folder of dated, named decisions: `2026-04-15-api-versioning.md`, `2026-03-22-payment-provider.md`. One decision per file. Each file captures four things:
+
+- **What was decided** (one line, plain language)
+- **Why** (the reasoning, the constraints, what mattered)
+- **What you chose not to do** (the alternatives and why they lost)
+- **When you'd revisit** (what would have to change for this decision to flip)
+
+The trap most decision logs fall into: capturing only the *what*. The *why* is what stops you from re-debating it three weeks later. When someone says "let's revisit the database choice," Claude can pull the decision file and say "you decided this on March 22 because X, Y, Z - has any of that actually changed?" That's the value.
+
+**Wiring it in:** add a line to your CLAUDE.md under Capture Discipline:
+
+> When I make a non-trivial decision (architecture, vendor, scope, approach), write it to `files/decisions/[YYYY-MM-DD]-[topic].md` with what, why, alternatives, and revisit conditions. Update `context-index.md` to point at it.
+
+**Example:**
+
+```markdown
+# Decision: Use Postgres over SQLite for staging
+
+**Date:** 2026-04-15
+**Status:** Active
+
+## What
+Run staging on Postgres, matching production. Drop SQLite from the stack.
+
+## Why
+- Migration bugs surfaced in staging that didn't exist in SQLite
+- Two database engines = two sets of edge cases to test
+- Hosting cost difference is small at our scale
+
+## What we chose not to do
+- Keep SQLite for staging speed: rejected because the staging-vs-prod
+  divergence was the actual cause of two outages in March
+
+## Revisit if
+- Hosting cost on Postgres staging crosses $200/mo
+- We adopt a feature requiring SQLite-specific behavior
+```
+
+The format isn't sacred. The discipline is: every non-trivial decision gets a file, every file has a *why*, and future-you can scan the folder and not re-debate anything you've already settled.
+
+---
+
 ## Directory structure
 
 ```
@@ -367,7 +413,29 @@ Tier 3 stays unloaded until you ask for it: *"Load MEMORY-reference.md and find 
 
 ---
 
+## Protecting the memory layer: hooks
+
+Memory systems usually focus on what to capture. The harder problems are what *not* to capture, and what to *protect from accidental clobber*. Hooks turn discipline into enforcement - they run whether or not you're paying attention.
+
+Three patterns worth naming. Implementations are project-specific; the patterns are the part to copy.
+
+**1. State-file guard (PreToolUse).** A hook that blocks the `Write` tool on memory and state files like `MEMORY.md`, `current.md`, `audit-log.md`, `CLAUDE.md`. Forces `Edit` only - no full-file overwrites. The result: no accidental clobber, no silent loss. Born from a real incident where a one-shot `Write` blew away an audit log that should have been an `Edit`. The hook is the seatbelt.
+
+**2. PII filter (UserPromptSubmit).** A hook that scans outgoing prompts for third-party emails, phone numbers, and other sensitive identifiers before anything reaches the API. The conversation is the leaky layer; files stay local but prompts are transmitted. The filter is a first line of defense, not a guarantee. Defense in depth.
+
+**3. PreCompact auto-savestate.** A hook that fires `/savestate` automatically when the context window starts compressing. No silent mid-session loss. You stop having to remember to save; the system remembers for you.
+
+Why hooks beat discipline alone: discipline drifts, hooks don't. A habit you have to remember to perform is a habit you'll forget when you're tired or moving fast. A hook runs every time the trigger fires.
+
+This is the layer where memory systems converge with trust frameworks - what the AI can access, what requires approval, how trust is earned. For the trust side, see [progressive-trust](https://github.com/malbers/progressive-trust).
+
+---
+
 ## Recent changes
+
+**April 2026** - Hooks layer documented (philosophy, no implementation): three patterns named - state-file guard (blocks `Write` on memory files, forces `Edit`-only), PII filter (scans prompts before API transmission), PreCompact auto-savestate. Where memory systems converge with trust frameworks.
+
+**April 2026** - Decision log promoted to a first-class pattern. `files/decisions/` gets its own section: what to capture (what, why, alternatives, revisit conditions), with a worked example. The discipline that prevents re-debating choices three weeks later.
 
 **April 2026** - Audit log pattern: drop `audit-log.md` at repo root; Claude appends a one-line entry per non-trivial action, tagged `auto` or `approved by user`. Observability for what the AI has done on your behalf, and the data layer for trust calibration.
 
