@@ -340,8 +340,13 @@ Once you have the basics running, you can go deeper:
 - **Feedback memories** - start saving corrections and confirmations. This is the
   highest-leverage memory type. Every correction you save is a mistake Claude
   never makes again. Every confirmation locks in an approach that worked.
-- **Decision log** - a file just for architectural choices. When you make a call
-  you don't want to re-debate, write it there with the reasoning.
+- **Decisions as a third pillar** - settled calls (architecture, vendor, model,
+  sequencing) get their own folder, status lifecycle (`active` / `superseded` /
+  `reversed` / `deprecated`), and supersession audit trail. Memory captures
+  behavior; `current.md` captures motion; decisions capture *resolution* - what
+  you've already settled and don't want to re-litigate. See the README's
+  Decisions section for the full pattern (file shape, frontmatter, supersession
+  rule, index format, auto-load wiring).
 - **Trust framework** - govern what your AI can access and when. Start with
   read-only, expand as trust is earned. See
   [progressive-trust](https://github.com/malbers/progressive-trust).

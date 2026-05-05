@@ -21,6 +21,7 @@ The result: Claude stops making the same mistakes session after session, and you
 | `memory/` | Typed memory files (user, feedback, project, reference) |
 | `how-this-works.md` | Full guide - the problem, the fix, the discipline |
 | `savestate-skill/SKILL.md` | Drop-in skill for Claude Code - triggers on `/savestate` |
+| `files/decisions/` | Settled architectural / vendor / model calls with status lifecycle - see Decisions section |
 
 ---
 
@@ -240,49 +241,125 @@ See `how-this-works.md` for the full pattern and wiring instructions.
 
 ---
 
-## Decision log: write the why, not just the what
+## Decisions: the third pillar
 
-`files/decisions/` deserves its own callout. It's one of the highest-leverage domain patterns and it's the easiest one to skip.
+Memory tells Claude *how to act*. `current.md` tracks *what's in flight*. Neither captures the third category that costs you the most when it's missing: **calls you already made and don't want to re-litigate.**
 
-A decision log is a folder of dated, named decisions: `2026-04-15-api-versioning.md`, `2026-03-22-payment-provider.md`. One decision per file. Each file captures four things:
+Vendor picks. Architectural choices. Model selection. Trade-offs accepted with eyes open. Six months later you forget *why* X beat Y, and you're back at the whiteboard re-running the same comparison. That re-debate cost is real, and decisions are their own type because their lifecycle is different from memory:
 
-- **What was decided** (one line, plain language)
-- **Why** (the reasoning, the constraints, what mattered)
-- **What you chose not to do** (the alternatives and why they lost)
-- **When you'd revisit** (what would have to change for this decision to flip)
+- **Memory is mostly evergreen.** A "don't use em dashes" rule stays true forever.
+- **Decisions get superseded.** A new call replaces an old one, and the audit trail is part of the value - you want to see *we tried X, then moved to Y, here's why*, not just "Y is the answer."
 
-The trap most decision logs fall into: capturing only the *what*. The *why* is what stops you from re-debating it three weeks later. When someone says "let's revisit the database choice," Claude can pull the decision file and say "you decided this on March 22 because X, Y, Z - has any of that actually changed?" That's the value.
+Mixing the two muddies both. So decisions get their own folder, their own file shape, and their own lifecycle.
 
-**Wiring it in:** add a line to your CLAUDE.md under Capture Discipline:
+### Where they live
 
-> When I make a non-trivial decision (architecture, vendor, scope, approach), write it to `files/decisions/[YYYY-MM-DD]-[topic].md` with what, why, alternatives, and revisit conditions. Update `context-index.md` to point at it.
-
-**Example:**
-
-```markdown
-# Decision: Use Postgres over SQLite for staging
-
-**Date:** 2026-04-15
-**Status:** Active
-
-## What
-Run staging on Postgres, matching production. Drop SQLite from the stack.
-
-## Why
-- Migration bugs surfaced in staging that didn't exist in SQLite
-- Two database engines = two sets of edge cases to test
-- Hosting cost difference is small at our scale
-
-## What we chose not to do
-- Keep SQLite for staging speed: rejected because the staging-vs-prod
-  divergence was the actual cause of two outages in March
-
-## Revisit if
-- Hosting cost on Postgres staging crosses $200/mo
-- We adopt a feature requiring SQLite-specific behavior
+```
+my-project/
+  files/
+    decisions/
+      decisions-index.md
+      001-postgres-over-mongo.md
+      002-resend-over-postmark.md
+      003-rest-over-graphql.md
 ```
 
-The format isn't sacred. The discipline is: every non-trivial decision gets a file, every file has a *why*, and future-you can scan the folder and not re-debate anything you've already settled.
+Sequential NNN per project (not dated filenames - dates are in the frontmatter). `decisions-index.md` is the always-readable one-page index; superseded entries fall off the index but stay on disk for the audit trail.
+
+### File shape
+
+```markdown
+---
+id: 002
+title: Use Resend over Postmark for transactional email
+status: active           # active | superseded | reversed | deprecated
+date: 2026-05-05
+supersedes: null
+superseded_by: null
+tags: [email, vendor]
+---
+
+## Context
+What forced the call. Constraints, options weighed, who pushed which way.
+2-4 sentences. The "why we couldn't punt."
+
+## Decision
+The actual call. One paragraph. Specific enough that re-reading 6 months later,
+you know exactly what was chosen.
+
+## Consequences
+What this commits us to + what it forecloses + the early-warning sign that
+the call was wrong. Bullet form is fine.
+
+## Revisit when (optional)
+A trigger condition - date, scale threshold, vendor event - that should re-open
+this file.
+```
+
+Status values:
+- `active` - current call, defer to it
+- `superseded` - replaced by a newer decision; `superseded_by` points forward
+- `reversed` - tried it, didn't work, undone (no replacement, just rollback)
+- `deprecated` - context dissolved (vendor gone, project killed); readable, no longer guides
+
+### When to write a decision
+
+All three must be true:
+
+1. You weighed at least 2 options and picked one.
+2. Re-debating it later would cost real time (not a 30-second re-pick).
+3. Future-you might forget *why* and undo the work.
+
+Routing:
+
+- About *how Claude should behave* → feedback memory, not a decision
+- *In flight*, not yet settled → `current.md`
+- *Settled*, weighed alternatives, will outlive this thread → decision file
+
+Trigger phrases in conversation: *"let's go with X"*, *"we're locked on X"*, *"don't revisit this - we already decided"*, *"I keep re-deciding this every session"*. Any model / vendor / library / architecture / sequencing pick after weighing alternatives.
+
+### Supersession (never edit in place)
+
+When a decision changes:
+
+1. Write a new file with the next NNN.
+2. Old file: flip `status: active → superseded`, fill `superseded_by: <new id>`.
+3. New file: fill `supersedes: <old id>`.
+4. Update `decisions-index.md`: remove the old line, add the new one.
+
+The chain stays intact. Anyone reading the file in 6 months sees the evolution, not just the current state.
+
+For `reversed`: same flip, no replacement.
+For `deprecated`: drops from index, file stays on disk for archaeology.
+
+### Wiring it in
+
+Each project's CLAUDE.md adds the index as an auto-load:
+
+```markdown
+## Decisions
+@files/decisions/decisions-index.md
+```
+
+`decisions-index.md` is a one-line-per-active-decision file:
+
+```markdown
+# Decisions Index
+
+- [001 - Use Postgres over Mongo](001-postgres-over-mongo.md) - schema fit, transactions, ops simplicity
+- [002 - Resend over Postmark for transactional email](002-resend-over-postmark.md) - pricing + DX
+- [003 - REST over GraphQL for v1 API](003-rest-over-graphql.md) - small client surface, cache-friendly
+```
+
+Format per line: `- [NNN - title](file.md) - one-line rationale`. Keep the index under 100 lines.
+
+### Why this pays off
+
+- **A re-debate brake.** When Claude or future-you starts spiraling on something settled, the index catches it: *"this is decided, see file 002."*
+- **A real audit trail.** Reasoning evolves. Superseded chains preserve the evolution.
+- **30-second project hand-off.** A peer (or subagent, or future-you) reading `decisions-index.md` knows the load-bearing calls in half a minute.
+
+Memory captures behavior. `current.md` captures motion. Decisions capture **resolution**. Three pillars, different jobs.
 
 ---
 
@@ -298,7 +375,7 @@ my-projects/
       MEMORY.md        <- always-loaded memory index
     files/
       people/          <- one file per person (high-leverage pattern)
-      decisions/       <- key architectural choices
+      decisions/       <- settled calls with status lifecycle (see Decisions section)
       research/        <- synthesized source material
   project-b/
     CLAUDE.md
@@ -434,6 +511,8 @@ This is the layer where memory systems converge with trust frameworks - what the
 ---
 
 ## Recent changes
+
+**May 2026** - Decisions promoted to a third pillar (alongside memory and `current.md`). Status lifecycle (`active` / `superseded` / `reversed` / `deprecated`), supersession protocol with audit trail (write new NNN, flip old, link both ways), `decisions-index.md` always-loaded via `@`-include, sequential NNN naming. Stops you re-debating settled calls.
 
 **April 2026** - Hooks layer documented (philosophy, no implementation): three patterns named - state-file guard (blocks `Write` on memory files, forces `Edit`-only), PII filter (scans prompts before API transmission), PreCompact auto-savestate. Where memory systems converge with trust frameworks.
 
