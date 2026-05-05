@@ -6,6 +6,8 @@ Claude resets every session. No memory of what you built yesterday, what you dec
 
 This repo is that structure. Two files per project, one habit, and sessions start compounding instead of resetting.
 
+The result: Claude stops making the same mistakes session after session, and you stop re-explaining yourself.
+
 ---
 
 ## What's in here
