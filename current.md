@@ -18,7 +18,12 @@ How to use this:
 
 ---
 
-## Key Decisions
+## Decisions
 
-[Important choices you've made and why. When you revisit a decision and confirm it,
-note that too — "reconsidered on [date], still the right call because..."]
+Decisions do not live here. They live in `files/decisions/` as one numbered file each,
+indexed by `files/decisions/decisions-index.md`. That separation is deliberate: `current.md`
+holds what is in motion, the decisions pillar holds what is settled, so a resolved call
+stops competing for attention with active work.
+
+See the "Decisions: the third pillar" section of the README for the format and the
+supersession protocol.

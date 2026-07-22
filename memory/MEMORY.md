@@ -22,7 +22,7 @@ When `MEMORY.md` grows past ~150 lines, move project-specific entries to Tier 2 
 - (no entries yet - Claude adds these as it learns about you)
 
 ## Feedback
-- [example-feedback.md](memory/example-feedback.md) - Example feedback memory, delete and replace with your own
+- [example-feedback.md](example-feedback.md) - Example feedback memory, delete and replace with your own
 
 ## Project
 - (no entries yet - ongoing work context, goals, deadlines)

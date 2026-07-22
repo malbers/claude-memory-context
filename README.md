@@ -481,7 +481,7 @@ In your top-level `MEMORY.md`, add a header that makes the tiering explicit so C
 Then in each project's `CLAUDE.md`, add a line referencing Tier 2 so it loads automatically when you open Claude Code in that project:
 
 ```
-@MEMORY-projects.md
+@memory/MEMORY-projects.md
 ```
 
 Tier 3 stays unloaded until you ask for it: *"Load MEMORY-reference.md and find the deploy steps."*
@@ -511,6 +511,8 @@ This is the layer where memory systems converge with trust frameworks - what the
 ---
 
 ## Recent changes
+
+**July 2026** - Consistency pass and a license. `current.md` no longer ships a stale "Key Decisions" section left over from before decisions became their own pillar; it now points at `files/decisions/` so there is exactly one home for a settled call. Fixed two broken paths: the link in `memory/MEMORY.md` resolved relative to its own directory, and the README's Tier 2 snippet said `@MEMORY-projects.md` where the file actually lives at `@memory/MEMORY-projects.md`. Added an MIT `LICENSE`, which the repo had been missing. Several of these surfaced when someone ported the framework to another stack and their tooling read the repo more literally than a human does.
 
 **May 2026** - Decisions promoted to a third pillar (alongside memory and `current.md`). Status lifecycle (`active` / `superseded` / `reversed` / `deprecated`), supersession protocol with audit trail (write new NNN, flip old, link both ways), `decisions-index.md` always-loaded via `@`-include, sequential NNN naming. Stops you re-debating settled calls.
 
