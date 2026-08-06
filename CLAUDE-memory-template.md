@@ -57,6 +57,16 @@ extract what matters, write a dated entry to `current.md`, confirm what was save
 
 ---
 
+## State Files: Edit, Never Write
+
+**`MEMORY.md`, `current.md`, `audit-log.md`, `CLAUDE.md` and anything under `memory/` are amended with the Edit tool. Never write them whole with Write.**
+
+A full-file write replaces the file. Everything not in the new version is gone, with no error and no warning. If you have not committed recently, it is unrecoverable.
+
+This is the rule most worth moving into code rather than trusting to habit, because it fails at the moment of action instead of announcing itself. `README.md` describes the state-file guard hook that enforces it.
+
+---
+
 ## Memory
 Persistent memory lives in `memory/`. `memory/MEMORY.md` is the always-loaded index - load it every session.
 Memory files capture things worth remembering across sessions: user preferences, feedback on approach, project context, external references.
@@ -68,6 +78,12 @@ When you learn something that should persist, write it to a memory file and add 
 - **`memory/MEMORY-reference.md`** (Tier 3) - on-demand. Loaded only when a specific tool or topic comes up.
 
 Start with Tier 1 only. Tiering is an optimization for when memory grows.
+
+**`@`-imports need forward slashes, even on Windows.** `@D:\projects\repo\memory\MEMORY-projects.md` is accepted, looks correct, and silently never loads. `@D:/projects/repo/memory/MEMORY-projects.md` works. The drive letter and colon are fine; it is the separator.
+
+There is no error when this breaks. The file simply is not there, and every session runs without it while appearing normal.
+
+**Verify by running `/context` and counting the memory files it lists.** Compare that number against how many you expect. Do not verify by reading the import line and judging it plausible, because a broken path looks exactly like a working one.
 
 ---
 

@@ -106,6 +106,16 @@ Open: [what's still pending]
 Next: [immediate next step]
 ```
 
+### Keep state in current.md, keep narrative out of it
+
+`current.md` holds **state**: what the thread is, where it stands, what happens next, who owns it. That is the shape above, and a thread's state stays roughly that size no matter how long the thread runs. Keep `[What was done]` to a line or two of status, not an account of the session.
+
+**Session narrative belongs in a dated file** such as `session-log.md`: what happened this session, what you found, how you got there, what you tried that did not work. Write it there and point to it from the thread.
+
+The failure this prevents is slow and silent. `current.md` loads at the start of every session, so anything written into it is paid for again on every future session in that project. If savestate pours narrative in each run, the file grows without bound and eventually dominates what gets loaded before you have typed anything. Prevention is one habit. Fixing it later means auditing every thread in the file by hand to work out which lines were state and which were story.
+
+This is a different problem from the one the context-index pattern solves. That one routes threads out once they close. This one is narrative piling up inside threads that are still **open**, which archiving cannot reach, because nothing in them is finished.
+
 ## Format for Domain File Entry (CLOSED threads)
 
 Write full fidelity — do NOT compress or summarize. Preserve all context, decisions, and nuance. Use this header:
