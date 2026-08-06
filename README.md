@@ -99,7 +99,9 @@ Savestate handles mid-session capture. The bigger habit is bracketing each day w
 
 - **`/EOD`** - End of Day. Closes the day. Captures what shipped, what slipped, what's pending tomorrow, plus any open promises to others that drifted. Writes a dated handoff file that `/SOD` reads first thing the next morning. Also merges the daily branch back to `main` with `--no-ff` so each day shows up as a discrete commit.
 
-`/savestate` protects against mid-session loss. `/SOD` and `/EOD` make days compound. Public skill files coming - the pattern is the part to copy first.
+`/savestate` protects against mid-session loss. `/SOD` and `/EOD` make days compound.
+
+Only the savestate skill file ships in this repo. `/SOD` and `/EOD` reach into whatever calendar, todo store and project files you already run, so a shared implementation would mostly be someone else's plumbing. The pattern is the part to copy; build the two bookends against your own stack.
 
 ---
 
@@ -511,6 +513,8 @@ This is the layer where memory systems converge with trust frameworks - what the
 ---
 
 ## Recent changes
+
+**August 2026** - Three silent failure modes closed, all the same shape: they produce no error, so a solo user has no reason to go looking for them. State files are now marked `Edit`-only in `CLAUDE-memory-template.md` rather than only here - a full-file `Write` on `MEMORY.md` or `current.md` replaces the file and everything not in the new version is gone with no warning, and that rule belongs in the file the agent reads every session, not the one a person reads once. `@`-imports need forward slashes even on Windows: `@D:\path\file.md` is accepted, looks correct, and never loads, so sessions run without the file while appearing entirely normal, which is worse than having no memory system because you trust one that is not loading; the template now carries the verification method, which is to run `/context` and count the memory files it lists rather than read the import line and judge it plausible. And savestate now separates state from narrative - the context-index pattern above handles threads once they close, but the other axis is session narrative accumulating inside threads that are still open, which on a live repo reached ~119k tokens of active threads that archiving could not have touched because none of them were finished.
 
 **July 2026** - Consistency pass and a license. `current.md` no longer ships a stale "Key Decisions" section left over from before decisions became their own pillar; it now points at `files/decisions/` so there is exactly one home for a settled call. Fixed two broken paths: the link in `memory/MEMORY.md` resolved relative to its own directory, and the README's Tier 2 snippet said `@MEMORY-projects.md` where the file actually lives at `@memory/MEMORY-projects.md`. Added an MIT `LICENSE`, which the repo had been missing. Several of these surfaced when someone ported the framework to another stack and their tooling read the repo more literally than a human does.
 
